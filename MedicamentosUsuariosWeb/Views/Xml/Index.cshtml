@@ -1,0 +1,122 @@
+﻿@{
+    ViewData["Title"] = "Cargar Archivo XML";
+}
+
+<h2>Cargar Archivo XML</h2>
+
+<div class="container mt-3">
+    <div class="mb-3">
+        <label for="usuario" class="form-label">Usuario</label>
+        <input type="text" class="form-control" id="usuario" placeholder="Ingresa tu usuario">
+    </div>
+
+    <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <input type="password" class="form-control" id="password" placeholder="Ingresa tu contraseña">
+    </div>
+
+    <div class="mb-3">
+        <label for="xmlFile" class="form-label">Selecciona un archivo XML</label>
+        <input type="file" class="form-control" id="xmlFile" accept=".xml">
+    </div>
+
+    <div class="mb-3">
+        <label for="uuid" class="form-label">UUID Extraído</label>
+        <input type="text" class="form-control" id="uuid" readonly>
+    </div>
+
+    <button id="verPDF" class="btn btn-primary" disabled>Ver PDF</button>
+
+    <div class="alert alert-danger mt-3 d-none" id="errorMessage">
+        Ha ocurrido un error al procesar el archivo XML o al obtener el PDF.
+    </div>
+
+    <div class="alert alert-danger mt-3 d-none" id="authErrorMessage">
+        Usuario o contraseña incorrectos.
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Al seleccionar el archivo XML
+        $('#xmlFile').on('change', function (event) {
+            var file = event.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var parser = new DOMParser();
+                    var xmlDoc = parser.parseFromString(e.target.result, "text/xml");
+
+                    // Extraer el UUID del nodo tfd:TimbreFiscalDigital
+                    var tfd = xmlDoc.getElementsByTagName("tfd:TimbreFiscalDigital")[0];
+                    if (tfd) {
+                        var uuid = tfd.getAttribute("UUID");
+                        $('#uuid').val(uuid);
+                        $('#verPDF').prop('disabled', false);
+                    } else {
+                        $('#uuid').val('');
+                        $('#verPDF').prop('disabled', true);
+                        alert('No se encontró el nodo tfd:TimbreFiscalDigital.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Al hacer clic en el botón para ver el PDF
+        $('#verPDF').on('click', function () {
+            var uuid = $('#uuid').val();
+            var usuario = $('#usuario').val();
+            var password = $('#password').val();
+
+            // Validar que el usuario y la contraseña no estén vacíos
+            if (!usuario || !password) {
+                alert('Por favor, ingresa usuario y contraseña.');
+                return;
+            }
+
+            var soapMessage =
+                `<?xml version="1.0" encoding="utf-8"?>` +
+                `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ws="http://ws.timbrador.cepdi.mx/">` +
+                `<soapenv:Header/>` +
+                `<soapenv:Body>` +
+                `<ws:ObtenerPDF>` +
+                `<ws:Usuario>${usuario}</ws:Usuario>` +
+                `<ws:Password>${password}</ws:Password>` +
+                `<ws:UUID>${uuid}</ws:UUID>` +
+                `</ws:ObtenerPDF>` +
+                `</soapenv:Body>` +
+                `</soapenv:Envelope>`;
+
+
+            $.ajax({
+                url: 'https://timbrador.cepdi.mx:8443/WSDemo/WS',
+                type: 'POST',
+                dataType: 'xml',
+                contentType: 'text/xml;charset=UTF-8',
+                data: soapMessage,
+                success: function (response) {
+                    // Obtener el PDF en base64 de la respuesta
+                    var exitoso = $(response).find("Exitoso").text();
+                    if (exitoso === "true") {
+                        var base64String = $(response).find("PDF").text();
+                        var pdfWindow = window.open("");
+                        pdfWindow.document.write("<iframe width='100%' height='100%' src='data:application/pdf;base64," + base64String + "'></iframe>");
+                    } else {
+                        var mensajeError = $(response).find("MensajeError").text();
+                        $('#authErrorMessage').removeClass('d-none').text(mensajeError || 'Error al obtener el PDF.');
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    var errorMsg = 'Error en la petición: ' + textStatus + ' ' + errorThrown;
+                    if (jqXHR.responseText) {
+                        errorMsg += ' - Respuesta del servidor: ' + jqXHR.responseText;
+                    }
+                    $('#errorMessage').removeClass('d-none').text(errorMsg);
+                }
+            });
+        });
+    });
+
+</script>
+

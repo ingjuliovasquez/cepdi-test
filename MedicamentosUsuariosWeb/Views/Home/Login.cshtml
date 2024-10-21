@@ -1,0 +1,50 @@
+﻿@{
+    ViewData["Title"] = "Login";
+}
+
+<h2>Iniciar Sesión</h2>
+
+<form id="login-form">
+    <div class="mb-3">
+        <label for="usuario" class="form-label">Nombre de Usuario</label>
+        <input type="text" class="form-control" id="usuario" name="usuario" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+</form>
+
+<p id="login-error" class="text-danger" style="display: none;">Usuario o contraseña incorrectos</p>
+
+<script>
+    $(document).ready(function () {
+        // Escuchar el evento submit del formulario de login
+        $('#login-form').on('submit', function (event) {
+            event.preventDefault();
+
+            // Recoger los datos del formulario
+            const loginData = {
+                usuario: $('#usuario').val(),
+                password: $('#password').val()
+            };
+
+            // Enviar la solicitud AJAX al controlador de login
+            $.ajax({
+                url: 'https://localhost:7061/api/Auth/login',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(loginData),
+                success: function (response) {
+                    localStorage.setItem('token', response.token);
+                    window.location.href = '/home';
+                },
+                error: function () {
+                    $('#login-error').show();
+                }
+            });
+        });
+    });
+</script>
+

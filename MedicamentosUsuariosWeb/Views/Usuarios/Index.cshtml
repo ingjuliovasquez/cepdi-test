@@ -1,0 +1,205 @@
+﻿@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<h2>Usuarios</h2>
+
+<table id="usuarios-table" class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Nombre de Usuario</th>
+            <th>Fecha de Creación</th>
+            <th>Estatus</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Aquí se cargarán los usuarios con el código de abajo, que debe quedarse como está -->
+    </tbody>
+</table>
+
+<button id="crear-usuario" class="btn btn-primary">Agregar Usuario</button>
+
+<!-- Modal para crear/editar usuarios -->
+<div class="modal fade" id="usuarioModal" tabindex="-1" aria-labelledby="usuarioModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="usuarioModalLabel">Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="usuario-form">
+                    <input type="hidden" id="idUsuario" name="idUsuario">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nombreUsuario" class="form-label">Nombre de Usuario</label>
+                        <input type="text" class="form-control" id="nombreUsuario" name="nombreUsuario" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="estatus" class="form-label">Estatus</label>
+                        <select id="estatus" class="form-control" name="estatus">
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="guardar-usuario" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // Verificar si existe el token en localStorage
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/home/login';
+        }
+
+        // Configurar el token en todas las peticiones AJAX
+        $.ajaxSetup({
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        // Cargar los usuarios al iniciar
+        cargarUsuarios();
+
+        function cargarUsuarios() {
+            $.ajax({
+                url: 'https://localhost:7061/api/Usuarios',
+                method: 'GET',
+                success: function (data) {
+                    let usuariosHTML = '';
+                    data.forEach(function (usuario) {
+                        usuariosHTML += `
+                                <tr>
+                                   <td>${usuario.nombre}</td>
+                                   <td>${usuario.nombreUsuario}</td>
+                                   <td>${new Date(usuario.fechaCreacion).toLocaleDateString()}</td>
+                                   <td>${usuario.estatus == 1 ? 'Activo' : 'Inactivo'}</td>
+                                   <td>
+                                       <button class="btn btn-primary editar-usuario" data-id="${usuario.idUsuario}">Editar</button>
+                                       <button class="btn btn-danger eliminar-usuario" data-id="${usuario.idUsuario}">Eliminar</button>
+                                   </td>
+                                </tr>`;
+                    });
+                    $('#usuarios-table tbody').html(usuariosHTML);
+
+                    // Inicializar DataTables después de cargar los usuarios
+                    $('#usuarios-table').DataTable({
+                        "pageLength": 10,  // Paginación de 10 registros por página
+                        "destroy": true    // Destruir cualquier instancia previa antes de reinicializar
+                    });
+                }
+            });
+        }
+
+        // Abre el modal para crear un nuevo usuario
+        $('#crear-usuario').on('click', function () {
+            $('#usuarioModal').modal('show');
+            $('#usuario-form')[0].reset();
+            $('#idUsuario').val('');
+        });
+
+        // Función de validación de contraseña
+        function validarContrasena(password) {
+            const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+            return regex.test(password);
+        }
+
+        // Mostrar mensaje de error
+        function mostrarError(mensaje) {
+            alert(mensaje); // Puedes cambiar esto por un mensaje en el formulario si lo prefieres
+        }
+
+        // Guardar usuario (crear o editar)
+        $('#guardar-usuario').on('click', function () {
+            const password = $('#password').val();
+            if (!validarContrasena(password)) {
+                mostrarError('La contraseña debe tener al menos un carácter especial, una mayúscula, una minúscula, un número y tener al menos 8 caracteres.');
+                return; // No continuar si la validación falla
+            }
+
+            const idUsuario = $('#idUsuario').val();
+            const usuarioData = {
+                idUsuario: idUsuario || 0,
+                nombre: $('#nombre').val(),
+                nombreUsuario: $('#nombreUsuario').val(),
+                password: password,
+                estatus: $('#estatus').val(),
+                fechaCreacion: new Date()
+            };
+
+            if (idUsuario) {
+                // Actualizar usuario
+                $.ajax({
+                    url: `https://localhost:7061/api/Usuarios/${idUsuario}`,
+                    method: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(usuarioData),
+                    success: function () {
+                        $('#usuarioModal').modal('hide');
+                        cargarUsuarios();
+                    }
+                });
+            } else {
+                // Crear usuario nuevo
+                $.ajax({
+                    url: 'https://localhost:7061/api/Usuarios',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(usuarioData),
+                    success: function () {
+                        $('#usuarioModal').modal('hide');
+                        cargarUsuarios();
+                    }
+                });
+            }
+        });
+
+        // Editar usuario
+        $(document).on('click', '.editar-usuario', function () {
+            const idUsuario = $(this).data('id');
+            $.ajax({
+                url: `https://localhost:7061/api/Usuarios/${idUsuario}`,
+                method: 'GET',
+                success: function (usuario) {
+                    $('#idUsuario').val(usuario.idUsuario);
+                    $('#nombre').val(usuario.nombre);
+                    $('#nombreUsuario').val(usuario.nombreUsuario);
+                    $('#estatus').val(usuario.estatus);
+                    $('#usuarioModal').modal('show');
+                }
+            });
+        });
+
+        // Eliminar usuario
+        $(document).on('click', '.eliminar-usuario', function () {
+            const idUsuario = $(this).data('id');
+            if (confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
+                $.ajax({
+                    url: `https://localhost:7061/api/Usuarios/${idUsuario}`,
+                    method: 'DELETE',
+                    success: function () {
+                        cargarUsuarios();
+                    }
+                });
+            }
+        });
+    });
+</script>

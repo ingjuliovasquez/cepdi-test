@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35312.102
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedicamentosUsuariosAPI", "MedicamentosUsuariosAPI\MedicamentosUsuariosAPI.csproj", "{88C6B8E0-3BC3-451D-9289-EAC4569E7AEE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedicamentosUsuariosWeb", "MedicamentosUsuariosWeb\MedicamentosUsuariosWeb.csproj", "{6EE89F69-7676-4F81-9E55-C57CA2D73E3C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{88C6B8E0-3BC3-451D-9289-EAC4569E7AEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88C6B8E0-3BC3-451D-9289-EAC4569E7AEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88C6B8E0-3BC3-451D-9289-EAC4569E7AEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88C6B8E0-3BC3-451D-9289-EAC4569E7AEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6EE89F69-7676-4F81-9E55-C57CA2D73E3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6EE89F69-7676-4F81-9E55-C57CA2D73E3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6EE89F69-7676-4F81-9E55-C57CA2D73E3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6EE89F69-7676-4F81-9E55-C57CA2D73E3C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E57D2BAF-08B3-44ED-9C77-23111E47BD9F}
+	EndGlobalSection
+EndGlobal

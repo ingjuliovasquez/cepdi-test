@@ -1,0 +1,186 @@
+﻿@{
+    ViewData["Title"] = "Medicamentos";
+}
+
+<h2>Medicamentos</h2>
+
+<table id="medicamentos-table" class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Concentración</th>
+            <th>Precio</th>
+            <th>Presentación</th>
+            <th>Estatus</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Aquí se cargarán los medicamentos -->
+    </tbody>
+</table>
+
+<button id="crear-medicamento" class="btn btn-primary">Agregar Medicamento</button>
+
+<!-- Modal para crear/editar medicamentos -->
+<div class="modal fade" id="medicamentoModal" tabindex="-1" aria-labelledby="medicamentoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="medicamentoModalLabel">Medicamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="medicamento-form">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="concentracion" class="form-label">Concentración</label>
+                        <input type="text" class="form-control" id="concentracion" name="concentracion" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="precio" class="form-label">Precio</label>
+                        <input type="number" step="0.01" class="form-control" id="precio" name="precio" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="presentacion" class="form-label">Presentación</label>
+                        <input type="text" class="form-control" id="presentacion" name="presentacion" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="idFormaFarmaceutica" class="form-label">Forma Farmacéutica</label>
+                        <select class="form-select" id="idFormaFarmaceutica" name="idFormaFarmaceutica" required>
+                            <option value="1">Tableta</option>
+                            <option value="2">Pastilla</option>
+                            <option value="3">Jarabe</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="habilitado" class="form-label">Estatus</label>
+                        <select class="form-select" id="habilitado" name="habilitado">
+                            <option value="1">Activo</option>
+                            <option value="0">Inactivo</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="idMedicamento" name="idMedicamento">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="guardar-medicamento">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        cargarMedicamentos();
+
+        function cargarMedicamentos() {
+            $.ajax({
+                url: 'https://localhost:7061/api/Medicamentos',
+                method: 'GET',
+                success: function (data) {
+                    let medicamentosHTML = '';
+                    data.forEach(function (medicamento) {
+                        medicamentosHTML += `
+                                        <tr>
+                                           <td>${medicamento.nombre}</td>
+                                           <td>${medicamento.concentracion}</td>
+                                           <td>${medicamento.precio.toFixed(2)}</td>
+                                           <td>${medicamento.presentacion}</td>
+                                           <td>${medicamento.habilitado == 1 ? 'Activo' : 'Inactivo'}</td>
+                                           <td>
+                                               <button class="btn btn-primary editar-medicamento" data-id="${medicamento.idMedicamento}">Editar</button>
+                                               <button class="btn btn-danger eliminar-medicamento" data-id="${medicamento.idMedicamento}">Eliminar</button>
+                                           </td>
+                                        </tr>`;
+                    });
+                    $('#medicamentos-table tbody').html(medicamentosHTML);
+                    $('#medicamentos-table').DataTable({
+                        "pageLength": 10, // Paginación de 10 registros
+                        "destroy": true // Destruir cualquier inicialización previa para evitar conflictos
+                    });
+                }
+            });
+        }
+
+        
+
+        // Abre el modal para crear un nuevo medicamento
+        $('#crear-medicamento').on('click', function () {
+            $('#medicamentoModal').modal('show');
+            $('#medicamento-form')[0].reset();
+            $('#idMedicamento').val('');
+        });
+
+        // Guardar medicamento
+        $('#guardar-medicamento').on('click', function () {
+            const medicamento = {
+                idMedicamento: $('#idMedicamento').val(),
+                nombre: $('#nombre').val(),
+                concentracion: $('#concentracion').val(),
+                precio: $('#precio').val(),
+                presentacion: $('#presentacion').val(),
+                idFormaFarmaceutica: $('#idFormaFarmaceutica').val(),
+                habilitado: $('#habilitado').val(),
+                "formaFarmaceutica": {
+                    "idFormaFarmaceutica": 0,
+                    "nombre": "string",
+                    "habilitado": 0
+                }
+            }
+
+            const method = medicamento.idMedicamento ? 'PUT' : 'POST';
+            const url = medicamento.idMedicamento
+                ? `https://localhost:7061/api/Medicamentos/${medicamento.idMedicamento}`
+                : 'https://localhost:7061/api/Medicamentos';
+
+            $.ajax({
+                url: url,
+                method: method,
+                contentType: 'application/json',
+                data: JSON.stringify(medicamento),
+                success: function () {
+                    $('#medicamentoModal').modal('hide');
+                    cargarMedicamentos();
+                }
+            });
+        });
+
+        // Eliminar medicamento
+        $(document).on('click', '.eliminar-medicamento', function () {
+            const idMedicamento = $(this).data('id');
+            if (confirm('¿Estás seguro de que deseas eliminar este medicamento?')) {
+                $.ajax({
+                    url: `https://localhost:7061/api/Medicamentos/${idMedicamento}`,
+                    method: 'DELETE',
+                    success: function () {
+                        cargarMedicamentos();
+                    }
+                });
+            }
+        });
+
+        // Editar medicamento
+        $(document).on('click', '.editar-medicamento', function () {
+            const idMedicamento = $(this).data('id');
+            $.ajax({
+                url: `https://localhost:7061/api/Medicamentos/${idMedicamento}`,
+                method: 'GET',
+                success: function (data) {
+                    $('#idMedicamento').val(data.idMedicamento);
+                    $('#nombre').val(data.nombre);
+                    $('#concentracion').val(data.concentracion);
+                    $('#precio').val(data.precio);
+                    $('#presentacion').val(data.presentacion);
+                    $('#idFormaFarmaceutica').val(data.idFormaFarmaceutica);
+                    $('#habilitado').val(data.habilitado);
+                    $('#medicamentoModal').modal('show');
+                }
+            });
+        });
+    });
+</script>
