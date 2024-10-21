@@ -75,7 +75,7 @@ namespace MedicamentosUsuariosAPI.Controllers
 
         // POST: api/Medicamentos
         [HttpPost]
-        public async Task<ActionResult<Medicamento>> PostMedicamento(Medicamento medicamento)
+        public async Task<IActionResult> PostMedicamento(Medicamento medicamento)
         {
             FormaFarmaceutica? formaFarmaceutica = await _context.FormasFarmaceuticas.FindAsync(medicamento.IdFormaFarmaceutica);
             if (formaFarmaceutica == null)

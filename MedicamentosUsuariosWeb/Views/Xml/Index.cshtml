@@ -76,17 +76,15 @@
             }
 
             var soapMessage =
-                `<?xml version="1.0" encoding="utf-8"?>` +
-                `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ws="http://ws.timbrador.cepdi.mx/">` +
-                `<soapenv:Header/>` +
-                `<soapenv:Body>` +
-                `<ws:ObtenerPDF>` +
-                `<ws:Usuario>${usuario}</ws:Usuario>` +
-                `<ws:Password>${password}</ws:Password>` +
-                `<ws:UUID>${uuid}</ws:UUID>` +
-                `</ws:ObtenerPDF>` +
-                `</soapenv:Body>` +
-                `</soapenv:Envelope>`;
+                `<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+                    <Body>
+                        <ObtenerPDF xmlns="http://WebService/">
+                            <Usuario xmlns="">${usuario}</Usuario>
+                            <Password xmlns="">${password}</Password>
+                            <uuid xmlns="">${uuid}</uuid>
+                        </ObtenerPDF>
+                    </Body>
+                </Envelope>`;
 
 
             $.ajax({

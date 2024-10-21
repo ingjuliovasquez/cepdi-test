@@ -87,23 +87,21 @@
                     let usuariosHTML = '';
                     data.forEach(function (usuario) {
                         usuariosHTML += `
-                                <tr>
-                                   <td>${usuario.nombre}</td>
-                                   <td>${usuario.nombreUsuario}</td>
-                                   <td>${new Date(usuario.fechaCreacion).toLocaleDateString()}</td>
-                                   <td>${usuario.estatus == 1 ? 'Activo' : 'Inactivo'}</td>
-                                   <td>
-                                       <button class="btn btn-primary editar-usuario" data-id="${usuario.idUsuario}">Editar</button>
-                                       <button class="btn btn-danger eliminar-usuario" data-id="${usuario.idUsuario}">Eliminar</button>
-                                   </td>
-                                </tr>`;
+                            <tr>
+                                <td>${usuario.nombre}</td>
+                                <td>${usuario.nombreUsuario}</td>
+                                <td>${new Date(usuario.fechaCreacion).toLocaleDateString()}</td>
+                                <td>${usuario.estatus == 1 ? 'Activo' : 'Inactivo'}</td>
+                                <td>
+                                    <button class="btn btn-primary editar-usuario" data-id="${usuario.idUsuario}">Editar</button>
+                                    <button class="btn btn-danger eliminar-usuario" data-id="${usuario.idUsuario}">Eliminar</button>
+                                </td>
+                            </tr>`;
                     });
+                    $('#usuarios-table').DataTable().destroy();
                     $('#usuarios-table tbody').html(usuariosHTML);
-
-                    // Inicializar DataTables después de cargar los usuarios
                     $('#usuarios-table').DataTable({
-                        "pageLength": 10,  // Paginación de 10 registros por página
-                        "destroy": true    // Destruir cualquier instancia previa antes de reinicializar
+                        "pageLength": 10,
                     });
                 }
             });
